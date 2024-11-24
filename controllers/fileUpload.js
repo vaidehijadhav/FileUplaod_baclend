@@ -30,9 +30,12 @@ function isFileTypeSupported(type, supportTypes){
     return supportTypes.includes(type);
 }
 
-async function uploadFileToCloudinary(file, folder){
+async function uploadFileToCloudinary(file, folder, quality){
     const options = {folder};
     console.log("temp file path", file.tempFilePath);
+    if(quality){
+        options.quality = quality;
+    }
     options.resource_type = "auto";
     return await cloudinary.uploader.upload(file.tempFilePath, options);
 }
@@ -128,6 +131,57 @@ exports.videoUpload = async (req, res) => {
             message:'Video Successfully uploaded',
         })
 
+    }
+    catch(error){
+        console.error(error);
+        res.status(400).json({
+            success:false,
+            message:'Something went wrong',
+        })
+    }
+}
+
+
+// image size reducer
+exports.imageSizeReducer = async (req, res) => {
+    try {
+         // data fetch
+         const {name, tags, email} = req.body;
+         console.log(name,tags,email);
+ 
+         const file = req.files.imageFile;
+         console.log(file);
+ 
+         // Validation
+         const supportTypes = ["jpg", "jpeg", "png"];
+         const fileType = file.name.split('.')[1].toLowerCase();
+ 
+         if(! isFileTypeSupported(fileType, supportTypes)) {
+             return res.status(400).json({
+                 success:false,
+                 message:'File format not supported',
+             })
+         }
+ 
+         // file format supported
+        //  TODO: USe height 
+         console.log("Uploading to FileUpload")
+         const response = await uploadFileToCloudinary(file, "fileUpload", 90);
+         console.log(response);
+ 
+         // db mai entry save krni hai
+         const fileData = await File.create({
+             name,
+             tags,
+             email,
+             imageUrl: response.secure_url,
+         })
+         
+         res.json({
+             success:true,
+             imageUrl:response.secure_url,
+             message:'Image Successfully Uploaded',
+         })
     }
     catch(error){
         console.error(error);
