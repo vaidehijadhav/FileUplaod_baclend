@@ -1,4 +1,4 @@
-const cloud = require('cloudinary').v2;
+const cloudinary = require('cloudinary').v2;
 
 exports.cloudinaryConnect = () => {
     try{
